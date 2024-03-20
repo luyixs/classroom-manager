@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo_course_selection.dao.NoteDao">
+
+    <resultMap id="noteResultMap" type="com.example.demo_course_selection.domain.Note">
+        <id property="nId" column="nid"></id>
+        <result property="uId" column="uid"></result>
+        <result property="title" column="title"></result>
+        <result property="content" column="content"></result>
+        <result property="tag" column="tag"></result>
+        <result property="editTime" column="edit_time"></result>
+        <result property="isPublic" column="public"></result>
+
+    </resultMap>
+
+
+    <!--    List<Note> getPublicNotes();-->
+    <select id="getPublicNotes" resultMap="noteResultMap">
+        select *
+        from t_note
+        where public = 'true';
+
+    </select>
+
+    <!--    List<Note> getMyNotes(String uId);-->
+    <select id="getMyNotes" parameterType="String" resultMap="noteResultMap">
+        select *
+        from t_note
+        where uid = #{uId};
+    </select>
+
+    <!--    List<Note> getNoteById(String nId);-->
+    <select id="getNoteById" parameterType="String" resultMap="noteResultMap">
+        select *
+        from t_note
+        where nid = #{nId};
+    </select>
+
+
+    <!--    List<Note> getNotesByCondition(String condition,String isPublic);-->
+    <select id="getNotesByCondition" parameterType="String" resultMap="noteResultMap">
+        select *
+        from t_note
+        where public = #{isPublic}
+            and
+              (t_note.nid like '%${condition}%'
+           or t_note.uid like '%${condition}%'
+           or t_note.title like '%${condition}%'
+           or t_note.content like '%${condition}%'
+           or t_note.tag like '%${condition}%'
+           or t_note.edit_time like '%${condition}%')
+        ;
+    </select>
+
+    <!--    int addNote(Note note);-->
+    <insert id="addNote" parameterType="Note">
+        insert into t_note (nid, uid, title, content, tag, edit_time, public)
+        values (#{nId}, #{uId}, #{title}, #{content}, #{tag}, #{editTime}, #{isPublic});
+    </insert>
+
+    <!--    int updateNote(Note note);-->
+    <update id="updateNote" parameterType="Note">
+        update t_note
+        set uid       = #{uId},
+            title     = #{title},
+            content   = #{content},
+            tag       = #{tag},
+            edit_time = #{editTime},
+            public    = #{isPublic}
+        where nid = #{nId};
+    </update>
+
+    <!--    int deleteNote(String nId);-->
+    <delete id="deleteNote">
+        delete
+        from t_note
+        where nid = #{nId};
+    </delete>
+
+</mapper>

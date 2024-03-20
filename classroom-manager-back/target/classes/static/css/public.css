@@ -1,0 +1,99 @@
+.index-app{
+    width: 70%;
+    margin: 50px auto ;
+}
+
+.el-header,
+.el-footer {
+    background-color: #B3C0D1;
+    color: #333;
+    text-align: center;
+    line-height: 60px;
+    margin: 10px 0px ;
+}
+
+.el-aside {
+    background-color: #D3DCE6;
+    color: #333;
+    /* text-align: center; */
+    /* line-height: 200px; */
+    margin-right: 10px;
+}
+
+.el-main {
+    background-color: #E9EEF3;
+    color: #333;
+    /* text-align: center; */
+    /* line-height: 160px; */
+}
+
+body>.el-container {
+    margin-bottom: 40px;
+}
+
+.avatar-box{
+    text-align: center;
+}
+
+.el-menu-item .el-link{
+    width: 100%;
+    justify-content:flex-start;
+}
+.login-app .login-box{
+    width: 400px ;
+}
+
+
+/*SC*/
+
+.sc-container{
+    height: 70vh;
+    overflow: hidden scroll;
+    /*display: flex;*/
+}
+
+/* Mylecture */
+
+/* lecture-container */
+.lecture-container{
+    height: 70vh;
+    overflow: hidden scroll;
+    display: flex;
+    flex-wrap: wrap;
+    /* justify-content: flex-start; */
+    /* background-color: rgb(186, 197, 219); */
+}
+
+/* lecture-item */
+.lecture-item{
+    background-color: white;
+    border: 1px solid #afcff6;
+    border-radius: 5px;
+    width: 220px;
+    height: 150px;
+    margin: 10px;
+    transition: .2s;
+    text-align: center;
+    overflow: hidden;
+}
+.lecture-item >h4{
+    color: lightslategray;
+}
+.lecture-item>span{
+    font-size: 12px;
+}
+.lecture-item > .btn-group{
+    /* display: none; */
+    transform: translateY(50px);
+    transition: .2s;
+}
+
+.lecture-item:hover {
+    box-shadow: 5px 5px 10px #afcff6;
+}
+.lecture-item:hover .btn-group {
+    transform: translateY(0);
+}
+.red{
+    color: red;
+}

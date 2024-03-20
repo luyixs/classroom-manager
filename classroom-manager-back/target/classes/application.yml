@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/11?serverTimezonoe=UTC
+    username: root
+    password: 123456
+# Redis
+  redis:
+    host: localhost
+    port: 6379
+
+mybatis:
+  mapper-locations: classpath:/mapper/*.xml #*.xml mappers映射xml文件
+  type-aliases-package: com.example.demo_course_selection.domain #搜索指定包别名 resultType可以从该包下找实体类
+
+logging:
+  file:
+    name: log/log.log
+  level:
+    root: info
+    com.example.demo_course_selection: debug
+  pattern:
+    console: "%d - %m %n"

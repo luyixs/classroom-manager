@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<!--suppress ALL-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="../js/vue.js"></script>
+    <script src="../js/axios.min.js"></script>
+    <script src="../plugins/element-ui/index.js"></script>
+    <link rel="stylesheet" href="../plugins/element-ui/index.css">
+    <link rel="stylesheet" href="../css/public.css">
+    <title>我的授课</title>
+</head>
+
+<body>
+
+<div id="app" class="index-app">
+    <el-container>
+        <el-header>学生选课系统</el-header>
+        <el-container>
+            <!--侧边栏-->
+            <el-aside>
+                <!-- 头像盒子 -->
+                <el-card class="avatar-box" th:if="${null!=session.get('loginUser')}"
+                         th:object="${session.get('loginUser')}">
+                    <div>
+                        <el-avatar :size="80" th:text="*{name}"></el-avatar>
+                    </div>
+                    <div><br><span th:text="*{id}">User</span><br><span th:text="*{role}"></span><br>
+                        <el-link href="" icon="el-icon-user" :underline="false">个人信息</el-link>
+                        <!--                            <el-link th:href="@{/login/out}" icon="el-icon-remove-outline" :underline="false">注销</el-link>-->
+                    </div>
+                </el-card>
+                <!-- 登录盒子 -->
+                <el-card class="login-box" th:if="${null==session.get('loginUser')}">
+                    <el-form ref="form" label-width="50px" :model="formData" action="http://localhost:8080"
+                             method="post">
+                        <el-form-item label="ID:" size="medium">
+                            <el-input placeholder="请输入学号/教工号" v-model="formData.id" clearable></el-input>
+                        </el-form-item>
+                        <el-form-item label="密码:" size="medium">
+                            <el-input placeholder="请输入密码" v-model="formData.pwd" show-password></el-input>
+                        </el-form-item>
+                        <el-form-item label="身份:">
+                            <el-select v-model="formData.role" placeholder="请选择" size="mini" style="width: 100px;">
+                                <el-option v-for="item in roleOptions" :key="item.value" :label="item.label"
+                                           :value="item.value">
+                                </el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item>
+                            <el-button type="primary" @click="handleLogin">登录</el-button>
+                            <el-button type="primary" @click="redirectURL('/loginS') ">注册</el-button>
+                        </el-form-item>
+                    </el-form>
+                </el-card>
+                <!-- 导航栏 -->
+                <el-card>
+                    <el-menu default-active="1" class="el-menu-vertical-demo" @open="handleOpen"
+                             @close="" @select="handleSelect">
+                        <el-submenu index="1">
+                            <template slot="title">
+                                <i class="el-icon-reading"></i>
+                                <span>课程管理</span>
+                            </template>
+                            <el-menu-item-group>
+                                <template slot="title">学生服务</template>
+                                <el-menu-item index="/sc">
+                                    <el-link href="#" target="_self" :underline="false">选课</el-link>
+                                </el-menu-item>
+                                <el-menu-item index="/sc/mycourse">
+                                    <el-link href="#" target="_self" :underline="false">我的选课</el-link>
+                                </el-menu-item>
+                            </el-menu-item-group>
+                            <el-menu-item-group title="教师服务">
+                                <el-menu-item index="/lecture">
+                                    <el-link href="#" target="_self" :underline="false">我的授课</el-link>
+                                </el-menu-item>
+                            </el-menu-item-group>
+                        </el-submenu>
+                        <el-menu-item index="">
+                            <i class="el-icon-menu"></i>
+                            <span slot="title">成绩管理</span>
+                        </el-menu-item>
+                        <!--                        <el-menu-item index="3" disabled>-->
+                        <!--                            <i class="el-icon-document"></i>-->
+                        <!--                            <span slot="title">导航三</span>-->
+                        <!--                        </el-menu-item>-->
+                        <!--                        <el-menu-item index="4">-->
+                        <!--                            <i class="el-icon-setting"></i>-->
+                        <!--                            <span slot="title">导航四</span>-->
+                        <!--                        </el-menu-item>-->
+                    </el-menu>
+                </el-card>
+
+            </el-aside>
+            <!--Main-->
+            <el-container>
+                <el-main>
+                    <h2>我的授课</h2>
+
+                    <div>
+                        <span>查询：</span>
+                        <el-input placeholder="Search..." size="medium" style="width: 200px;"
+                                  suffix-icon="el-icon-search" v-model="searchWord">
+                        </el-input>
+                        <el-button round type="primary" size="medium" icon="el-icon-search"
+                                   @click="handleSearch"></el-button>
+                        <el-button round type="primary" size="medium" icon="el-icon-plus"
+                                   @click="handleOpenAddDialog">添加授课
+                        </el-button>
+                    </div>
+
+                    <el-divider></el-divider>
+
+                    <div class="lecture-container">
+                        <div class="lecture-item" v-for="lecture in myLectureList">
+                            <h4>{{lecture.cName}}</h4>
+                            <span>课程ID：{{lecture.cId}}</span><br>
+                            <span>教师ID：{{lecture.teacherId}}</span>
+                            <div class="btn-group">
+                                <el-button type="primary" icon="el-icon-edit" circle
+                                           @click="handleOpenEditDialog(lecture)"></el-button>
+                                <template>
+                                    <el-popconfirm @confirm="handleDeleteLecture(lecture.cId)" icon="el-icon-info"
+                                                   icon-color="red"
+                                                   title="您确定要删除该授课吗？该课程对应的所有学生的选课记录也会被删除！">
+                                        <el-button type="danger" icon="el-icon-delete" circle
+                                                   slot="reference"></el-button>
+                                    </el-popconfirm>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                </el-main>
+            </el-container>
+        </el-container>
+        <el-footer>学生选课系统</el-footer>
+    </el-container>
+
+    <!--添加授课对话框  -->
+    <el-dialog title="添加授课" :visible.sync="addDialogVisible" width="500px" :before-close="handleClose">
+
+        <el-form label-width="80px" :model="lectureData" action="http://localhost:8080" method="post">
+            <el-form-item label="教师ID:">
+                <el-input th:text="${session.loginUser.getId()}" v-model="lectureData.teacherId"
+                          :disabled="true"></el-input>
+            </el-form-item>
+            <el-form-item label="课程ID:" size="medium">
+                <el-input placeholder="请输入课程ID" v-model='lectureData.cId'>
+                    <el-select v-model="lectureData.cId" @change="handleChangeCourseId" slot="prepend"
+                               placeholder="从已有的选择" style="width:150px ;">
+                        <el-option v-for="lecture in lectureOptions.myLectures" :key="lecture.cId"
+                                   :label="lecture.cId" :value="lecture.cId">
+                            <span>{{lecture.cId}}</span><span
+                                style="float: right; color: #8492a6; font-size: 13px">{{lecture.cName}}</span>
+                        </el-option>
+                    </el-select>
+                    <el-button slot="append" icon="el-icon-refresh" @click="handleRefreshCourseId"></el-button>
+                </el-input>
+            </el-form-item>
+            <el-form-item label="课程名称:" size="medium">
+                <el-input placeholder="请输入课程名称" v-model="lectureData.cName" clearable></el-input>
+            </el-form-item>
+            <el-form-item label="学分:" size="medium" style="width: 280px;">
+                <el-select v-model="lectureData.credit" placeholder="请选择">
+                    <el-option v-for="item in lectureOptions.credit" :key="item" :label="item" :value="item">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="人数限制:" size="medium">
+                <el-input-number v-model="lectureData.limit" controls-position="right" :min="1" :max="200">
+                </el-input-number>
+            </el-form-item>
+            <el-form-item label="教室:" size="medium">
+                <el-input placeholder="请输入教室" v-model="lectureData.classRoom" clearable></el-input>
+            </el-form-item>
+            <el-form-item label="上课时间:" size="medium">
+                <el-select v-model="lectureOptions.lectureDayofWeek" placeholder="周一" size="mini"
+                           style="width: 100px;">
+                    <el-option v-for="day in lectureOptions.week " :key="day" :label="day" :value="day"></el-option>
+                </el-select>
+                <el-select v-model="lectureOptions.lectureSection" placeholder="第一大节" size="mini"
+                           style="width: 100px;">
+                    <el-option v-for="section in lectureOptions.section" :key="section" :label="section"
+                               :value="section">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="选修类型" size="medium">
+                <el-radio v-model="lectureData.type" label="必修">必修</el-radio>
+                <el-radio v-model="lectureData.type" label="选修">选修</el-radio>
+            </el-form-item>
+            <el-form-item label="可选院系:" size="medium">
+                <el-select v-model="lectureData.academy" placeholder="院系" size="mini" style="width: 100px;">
+                    <el-option v-for="academy in lectureOptions.academy" :key="academy" :label="academy"
+                               :value="academy">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="课程介绍:">
+                <el-input type="textarea" placeholder="请输入课程介绍..." v-model="lectureData.cIntro" maxlength="200"
+                          show-word-limit>
+                </el-input>
+
+            </el-form-item>
+        </el-form>
+
+        <p class="red">
+            <b>注意：</b><span>若只是添加课程节次，不修改课程，则课程ID、课程名称、人数限制、学分应与之前保持一致，只需要更改教室和上课时间，否则会创建一门新的课程而不是添加已有的课程节次</span>
+
+        </p>
+
+        <span slot="footer" class="dialog-footer">
+                <el-button @click="addDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="handleAddLecture">确 定</el-button>
+        </span>
+
+    </el-dialog>
+
+    <!--编辑对话框-->
+    <el-dialog th:title="编辑课程" :visible.sync="editDialogVisible" width="500px" :before-close="handleClose">
+
+        <el-form label-width="80px" :model="lectureData" action="http://localhost:8080" method="post">
+            <el-form-item label="教师ID:">
+                <el-input th:text="${session.loginUser.getId()}" v-model="lectureData.teacherId"
+                          :disabled="true"></el-input>
+            </el-form-item>
+            <el-form-item label="课程ID:" size="medium">
+                <el-input placeholder="请输入课程ID" v-model="lectureData.cId" :disabled="true"></el-input>
+            </el-form-item>
+            <el-form-item label="课程名称:" size="medium">
+                <el-input placeholder="请输入课程名称" v-model="lectureData.cName" clearable></el-input>
+            </el-form-item>
+            <el-form-item label="学分:" size="medium" style="width: 280px;">
+                <el-select v-model="lectureData.credit" placeholder="请选择">
+                    <el-option v-for="item in lectureOptions.credit" :key="item" :label="item" :value="item">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="人数限制:" size="medium">
+                <el-input-number v-model="lectureData.limit" controls-position="right" :min="1" :max="200">
+                </el-input-number>
+            </el-form-item>
+            <el-form-item label="教室:" size="medium">
+                <el-input placeholder="请输入教室" v-model="lectureData.classRoom" clearable></el-input>
+            </el-form-item>
+            <el-form-item label="上课时间:" size="medium">
+                <el-select v-model="lectureOptions.lectureDayofWeek" placeholder="周一" size="mini"
+                           style="width: 100px;">
+                    <el-option v-for="day in lectureOptions.week " :key="day" :label="day" :value="day"></el-option>
+                </el-select>
+                <el-select v-model="lectureOptions.lectureSection" placeholder="第一大节" size="mini"
+                           style="width: 100px;">
+                    <el-option v-for="section in lectureOptions.section" :key="section" :label="section"
+                               :value="section">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="选修类型" size="medium">
+                <el-radio v-model="lectureData.type" label="必修">必修</el-radio>
+                <el-radio v-model="lectureData.type" label="选修">选修</el-radio>
+            </el-form-item>
+            <el-form-item label="可选院系:" size="medium">
+                <el-select v-model="lectureData.academy" placeholder="院系" size="mini" style="width: 100px;">
+                    <el-option v-for="academy in lectureOptions.academy" :key="academy" :label="academy"
+                               :value="academy">
+                    </el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="课程介绍:">
+                <el-input type="textarea" placeholder="请输入课程介绍..." v-model="lectureData.cIntro" maxlength="200"
+                          show-word-limit>
+                </el-input>
+
+            </el-form-item>
+        </el-form>
+
+        <span slot="footer" class="dialog-footer">
+                <el-button @click="editDialogVisible = false">取 消</el-button>
+                <el-button type="primary" @click="handleUpdateLecture">确 定</el-button>
+        </span>
+
+
+    </el-dialog>
+
+</div>
+
+
+<script type="module">
+    import {nanoid} from "../js/nanoid.js";
+    // import { nanoid } from 'https://cdn.jsdelivr.net/npm/nanoid/nanoid.js'
+
+    Vue.config.productionTip = false //阻止vue 在启动时生成生产提示
+    new Vue({
+        el: "#app",
+        data() {
+            return {
+                searchWord: '',
+                addDialogVisible: false, //是否显示添加授课对话框
+                editDialogVisible: false, //编辑对话框
+                myLectureList: [],
+                roleOptions: [{value: 'student', label: '学生'}, {value: 'teacher', label: '教师'}, {
+                    value: 'admin',
+                    label: '管理员'
+                }],
+                lectureOptions: {
+                    week: ['周一', '周二', '周三', '周四', '周五'],
+                    section: ['第一大节', '第二大节', '第三大节', '第四大节', '第五大节', '第六大节'],
+                    // myLectures: [{cId: 'qwe123', cName: 'java'}, {cId: 'asd123', cName: 'C#'}],
+                    myLectures: [],
+                    credit: [1, 2, 3, 4],
+                    academy: ['全部', '计算机学院', '艺术学院', '医学院', '理学院'],
+                    lectureDayofWeek: '周一',
+                    lectureSection: '第一大节',
+                },
+                formData: {
+                    id: '',
+                    name: '',
+                    pwd: '',
+                    className: '',
+                    academy: '',
+                    major: '',
+                    tel: '',
+                    email: '',
+                    role: 'student'
+                },
+                lectureData: {
+                    cId: '',
+                    cName: '',
+                    teacherId: '', //从后台获取
+                    credit: null,
+                    limit: null,
+                    classRoom: '',
+                    timeRange: '',
+                    type: '必修',
+                    academy: '',
+                    cIntro: '课程介绍...',
+                },
+                loginUser: {}
+
+            }
+        },
+        watch: {
+            lectureOptions: {
+                deep: true,
+                immediate: true,
+                handler(newVal, oldVal) {
+                    this.lectureData.timeRange = newVal.lectureDayofWeek + '_' + newVal.lectureSection
+                }
+            }
+        },
+        methods: {
+            //获取我的授课列表
+            getLectureList(condition) {
+                axios({method: 'GET', url: '/lecture/list', params: {q: condition}}).then(rsp => {
+                    console.log(rsp.data)
+                    if (rsp.data.success) this.myLectureList = rsp.data.data
+                }, err => {
+                    this.$message.error(err.message)
+                })
+            },
+            handleLogin() {
+                console.log(this.formData);
+                axios({
+                    method: 'POST',
+                    url: '/login/',
+                    data: {
+                        id: this.formData.id,
+                        pwd: this.formData.pwd,
+                        role: this.formData.role
+                    }
+                }).then(rsp => {
+                    console.log(rsp.data)
+                    if (rsp.data.success) {
+                        this.$message({message: '登录成功！', type: 'success'})
+                        //保存localStorge
+                        //跳转页面
+                        this.redirectURL('/index')
+                    } else {
+                        this.$message("登录失败，请检查用户名和密码是否正确")
+                    }
+                }, err => {
+                    this.$message.error(err.message)
+                })
+            },            //登录
+            handleSelect(key, keyPath) {
+                console.log(key, keyPath);
+                this.redirectURL(key)
+            },            //选择跳转路径
+            handleClose(done) {
+                this.$confirm('确认关闭？').then(_ => {
+                    done();
+                }).catch(_ => {
+                });
+            },
+            handleOpen(key, keyPath) {
+            },
+            handleChangeCourseId() {
+                //根据选择的课程id填充对应的课程信息
+            },
+            handleRefreshCourseId() {
+                this.lectureData.cId = nanoid(6)
+                // 清除lectureData部分信息
+            },
+            //弹出添加课程对话框
+            handleOpenAddDialog() {
+                //清空lectureData中的值
+                Object.keys(this.lectureData).forEach(key => this.lectureData[key] = null)
+                var sourceTpl = {teacherId: this.loginUser.id, type: '必修', cIntro: '课程介绍...'}
+                //将默认模板分配给表单
+                this.lectureData = Object.assign(this.lectureData, sourceTpl)
+                if (this.loginUser.role == 'student') {
+                    this.$message("你的身份为学生，不能添加授课！");
+                    return;
+                } else {
+                    this.addDialogVisible = true
+                }
+            },
+            //弹出编辑课程对话框
+            handleOpenEditDialog(course) {
+                this.lectureData = course //将选中的课程传给lectureData
+                this.editDialogVisible = true
+
+            },
+            //添加课程
+            handleAddLecture() {
+                console.log(this.lectureData)
+                axios({method: 'POST', url: '/lecture/add', data: {lecture: this.lectureData}}).then(rsp => {
+                    console.log(rsp.data)
+                    if (rsp.data.success) {
+                        this.$message({message: '添加成功！', type: 'success'});
+                        this.addDialogVisible = false;
+                    } else {
+                        this.$message("添加失败")
+                    }
+                }, err => {
+                    this.$message.error(err.message)
+                }).finally(() => {
+                    this.getLectureList("")
+                })
+                // axios.post('http://localhost:8080/lecture',this.lectureData).then(
+                //     rsp=>{console.log('rsp:',rsp.data)},
+                //     err=>{this.$message(err.message)}
+                // )
+            },
+            //查询
+            handleSearch() {
+                console.log(this.searchWord);
+                this.getLectureList(this.searchWord)
+            },
+            //删除课程
+            handleDeleteLecture(cId) {
+                this.$message(cId)
+                axios({method: 'DELETE', url: '/lecture/del', params: {cId: cId}}).then(rsp => {
+                    console.log(rsp.data)
+                    if (rsp.data.success) this.$message({message: '删除成功！', type: 'success'})
+                }, err => {
+                    this.$message.error(err.message)
+                }).finally(() => {
+                    this.getLectureList("")
+                })
+
+            },
+            //编辑课程
+            handleUpdateLecture(){
+                // console.log(this.lectureData)
+                axios({method: 'POST', url: '/lecture/upd', data: this.lectureData}).then(rsp => {
+                    console.log(rsp.data)
+                    if (rsp.data.success) {
+                        this.$message({message: '编辑成功！', type: 'success'});
+                        this.editDialogVisible = false;
+                    } else {
+                        this.$message("编辑失败")
+                    }
+                }, err => {
+                    this.$message.error(err.message)
+                }).finally(() => {
+                    this.getLectureList("")
+                })
+            },
+            //跳转页面
+            redirectURL(url) {
+                console.log(url)
+                window.location.href = window.location.origin + url;
+            }
+        },
+        created() {
+            axios.baseURL = 'http://localhost:8080/'
+            axios.get('http://localhost:8080/session/loginUser', this.lectureData).then(rsp => {
+                this.loginUser = rsp.data
+                // this.lectureData.teacherId = this.loginUser.teacherId
+            })
+            this.getLectureList("")
+        }
+    })
+</script>
+</body>
+
+</html>
+
+
+<!--
+{"cId":"A0Fw7y","cName":"java","teacherId":"123","credit":2,"limit":1,"classRoom":"a01-1233","timeRange":"周二_第二大节","type":"选修","academy":"艺术学院","cIntro":"介绍...","abc":"ABC"}
+-->

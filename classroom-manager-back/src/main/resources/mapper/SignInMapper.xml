@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo_course_selection.dao.SignInDao">
+
+    <!--
+        List<SignIn> getSignInList();
+
+        SignIn getSinInByCode();
+
+        int addSignIn(SignIn signIn);
+
+        int deleteSignIn(String sicode);
+
+        int updateSignIn(SignIn signIn);
+
+    -->
+
+
+    <resultMap id="signInResultMap" type="com.example.demo_course_selection.domain.SignIn">
+        <result property="siCode" column="sicode"></result>
+        <result property="cId" column="cid"></result>
+        <result property="createTime" column="create_time"></result>
+        <result property="expire" column="expire"></result>
+    </resultMap>
+
+    <select id="getSignInList" resultMap="signInResultMap">
+        select *
+        from t_signin;
+    </select>
+
+    <select id="getSignInByCode" resultMap="signInResultMap" parameterType="String">
+        select *
+        from t_signin
+        where sicode = #{siCode};
+    </select>
+
+    <select id="getSignByUID" resultMap="signInResultMap" parameterType="String">
+        select *
+        from t_signin where uid = #{uid} ORDER BY create_time DESC ;
+    </select>
+
+    <insert id="addSignIn" parameterType="SignIn">
+        insert into t_signin
+        values (#{siCode},#{cId},#{uId},#{createTime}, #{expire})
+    </insert>
+
+    <delete id="deleteSignIn">
+        delete
+        from t_signin
+        where sicode = #{siCode};
+    </delete>
+
+    <update id="updateSignIn" parameterType="SignIn">
+        update t_signin
+        set sicode     = #{siCode},
+            cid = #{cId},
+            create_time=#{createTime},
+            expire= #{expire}
+        where sicode = #{siCode};
+    </update>
+
+
+
+</mapper>

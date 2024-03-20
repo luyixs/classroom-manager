@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo_course_selection.dao.CourseDao">
+
+    <resultMap id="courseResultMap" type="com.example.demo_course_selection.domain.Course">
+        <id property="cId" column="cid"></id>
+        <result property="cName" column="c_name"></result>
+        <result property="teacherId" column="teacher_id"></result>
+        <result property="credit" column="credit"></result>
+        <result property="classRoom" column="classroom"></result>
+        <result property="limit" column="limit"></result>
+        <result property="timeRange" column="time_range"></result>
+        <result property="cIntro" column="c_intro"></result>
+    </resultMap>
+
+    <select id="getCourseList" resultMap="courseResultMap">
+        select *
+        from t_course;
+    </select>
+
+    <select id="getCourseBycId" resultMap="courseResultMap" parameterType="String">
+        select *
+        from t_course
+        where cid = #{cId};
+    </select>
+
+    <select id="getCourseByTeacherId" resultMap="courseResultMap" parameterType="String">
+        select *
+        from t_course
+        where teacher_id = #{teacherId};
+    </select>
+
+
+    <insert id="addCourse" parameterType="Course">
+        insert into t_course
+        values (#{cId}, #{cName}, #{teacherId}, #{credit}, #{limit}, #{classRoom}, #{timeRange}, #{type}, #{academy},
+                #{cIntro})
+    </insert>
+
+    <delete id="deleteCourse">
+        delete
+        from t_course
+        where cid = #{cId};
+    </delete>
+
+    <update id="updateCourse" parameterType="Course">
+        update t_course
+        set c_name     = #{cName},
+            teacher_id = #{teacherId},
+            credit=#{credit},
+            classroom= #{classRoom},
+            `limit`    = #{limit},
+            time_range = #{timeRange},
+            type       = #{type},
+            academy=#{academy},
+            c_intro=#{cIntro}
+        where cid = #{cId};
+    </update>
+
+    <!--    List<Course> getCourseByCondition(String condition);-->
+    <select id="getCourseByCondition" parameterType="String" resultMap="courseResultMap">
+        SELECT *
+        FROM `t_course`
+        WHERE cid like '%${condition}%'
+           or c_name like '%${condition}%'
+           OR teacher_id like '%${condition}%'
+           OR classroom like '%${condition}%'
+           OR credit LIKE '%${condition}%'
+           or `limit` LIKE '%${condition}%'
+           OR type LIKE '%${condition}%'
+           OR academy LIKE '%${condition}%';
+    </select>
+
+    <!--List<Course> getTeacherCourseByCondition(String teacher,String condition);-->
+    <select id="getTeacherCourseByCondition" parameterType="String" resultMap="courseResultMap">
+        SELECT *
+        FROM `t_course`
+        WHERE cid like '%${condition}%'
+           or c_name like '%${condition}%'
+           OR teacher_id like '%${condition}%'
+           OR classroom like '%${condition}%'
+           OR credit LIKE '%${condition}%'
+           or `limit` LIKE '%${condition}%'
+           OR type LIKE '%${condition}%'
+           OR academy LIKE '%${condition}%'
+            and teacher_id = #{teacherId};
+    </select>
+
+
+</mapper>

@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<!--suppress ALL-->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="/js/vue.js"></script>
+    <script src="/js/axios.min.js"></script>
+    <script src="/plugins/element-ui/index.js"></script>
+    <link rel="stylesheet" href="/plugins/element-ui/index.css">
+    <link rel="stylesheet" href="/css/public.css">
+    <title>学生选课系统</title>
+</head>
+<body>
+
+<div id="app" class="index-app">
+
+    <el-container>
+        <el-header>学生选课系统</el-header>
+        <el-container>
+            <!--侧边栏-->
+            <el-aside>
+                <!-- 头像盒子 -->
+                <el-card class="avatar-box" th:if="${null!=session.get('loginUser')}"
+                         th:object="${session.get('loginUser')}">
+                    <div>
+                        <el-avatar :size="80" th:text="*{name}"></el-avatar>
+                    </div>
+                    <div>
+                        <br><span ref="uId" th:text="*{id}">User</span>
+                        <br><span th:text="*{role}"></span><br>
+                        <el-link href="" icon="el-icon-user" :underline="false">个人信息</el-link>
+                        <!--                            <el-link th:href="@{/login/out}" icon="el-icon-remove-outline" :underline="false">注销</el-link>-->
+                    </div>
+                </el-card>
+                <!-- 登录盒子 -->
+                <el-card class="login-box" th:if="${null==session.get('loginUser')}">
+                    <el-form ref="form" label-width="50px" :model="formData" action="http://localhost:8080"
+                             method="post">
+                        <el-form-item label="ID:" size="medium">
+                            <el-input placeholder="请输入学号/教工号" v-model="formData.id" clearable></el-input>
+                        </el-form-item>
+                        <el-form-item label="密码:" size="medium">
+                            <el-input placeholder="请输入密码" v-model="formData.pwd" show-password></el-input>
+                        </el-form-item>
+                        <el-form-item label="身份:">
+                            <el-select v-model="formData.role" placeholder="请选择" size="mini" style="width: 100px;">
+                                <el-option v-for="item in roleOptions" :key="item.value" :label="item.label"
+                                           :value="item.value">
+                                </el-option>
+                            </el-select>
+                        </el-form-item>
+                        <el-form-item>
+                            <el-button type="primary" @click="handleLogin">登录</el-button>
+                            <el-button type="primary" @click="redirectURL('/login') ">注册</el-button>
+                        </el-form-item>
+                    </el-form>
+                </el-card>
+                <!-- 导航栏 -->
+                <el-card>
+                    <el-menu default-active="1" class="el-menu-vertical-demo" @open="handleOpen"
+                             @close="handleClose" @select="handleSelect">
+                        <el-submenu index="1">
+                            <template slot="title">
+                                <i class="el-icon-reading"></i>
+                                <span>课程管理</span>
+                            </template>
+                            <el-menu-item-group>
+                                <template slot="title">学生服务</template>
+                                <el-menu-item index="/sc">
+                                    <el-link href="#" target="_self" :underline="false">选课</el-link>
+                                </el-menu-item>
+                                <el-menu-item index="/sc/mycourse">
+                                    <el-link href="#" target="_self" :underline="false">我的选课</el-link>
+                                </el-menu-item>
+                            </el-menu-item-group>
+                            <el-menu-item-group title="教师服务">
+                                <el-menu-item index="/lecture">
+                                    <el-link href="#" target="" :underline="false">我的授课</el-link>
+                                </el-menu-item>
+                            </el-menu-item-group>
+                        </el-submenu>
+                        <el-menu-item index="">
+                            <i class="el-icon-menu"></i>
+                            <span slot="title">成绩管理</span>
+                        </el-menu-item>
+                        <!--                        <el-menu-item index="3" disabled>-->
+                        <!--                            <i class="el-icon-document"></i>-->
+                        <!--                            <span slot="title">导航三</span>-->
+                        <!--                        </el-menu-item>-->
+                        <!--                        <el-menu-item index="4">-->
+                        <!--                            <i class="el-icon-setting"></i>-->
+                        <!--                            <span slot="title">导航四</span>-->
+                        <!--                        </el-menu-item>-->
+                    </el-menu>
+                </el-card>
+
+            </el-aside>
+            <!--Main-->
+            <el-container>
+                <el-main><h2>选课</h2>
+
+                    <div>
+                        <span>查询：</span>
+                        <el-input placeholder="Search..." size="medium" style="width: 200px;"
+                                  suffix-icon="el-icon-search" v-model="searchWord">
+                        </el-input>
+                        <el-button round type="primary" size="medium" icon="el-icon-search"
+                                   @click="handleSearch"></el-button>
+                    </div>
+                    <el-divider></el-divider>
+                    <div class="sc-container">
+                        <el-table :data="courseList" style="width: 100%" current-row-key="cId">
+                            <el-table-column prop="cId" label="课程ID" width="80px"></el-table-column>
+                            <el-table-column prop="cName" label="课程名称"></el-table-column>
+                            <el-table-column prop="teacherId" label="教师ID"></el-table-column>
+                            <el-table-column prop="credit" label="学分" width="50px"></el-table-column>
+                            <el-table-column prop="classRoom" label="教室"></el-table-column>
+                            <el-table-column prop="limit" label="人数" width="50px"></el-table-column>
+                            <el-table-column prop="type" label="选修类型"></el-table-column>
+                            <el-table-column prop="academy" label="学院"></el-table-column>
+                            <el-table-column label="操作">
+                                <template slot-scope="scope">
+                                    <el-button
+                                            size="mini"
+                                            @click="handleSelectCourse(scope.$index, scope.row)">选课
+                                    </el-button>
+                                </template>
+                            </el-table-column>
+                        </el-table>
+                        <hr>
+                        <!--                        <el-pagination small background layout="total,prev, pager, next, jumper"-->
+                        <!--                                       :total="pagination.total"-->
+                        <!--                                       :page-size="pagination.pageSize" :current-page="pagination.currentPage"-->
+                        <!--                                       @current-change="handleCurrentChange">-->
+                        <!--                        </el-pagination>-->
+
+                    </div>
+
+
+                </el-main>
+            </el-container>
+        </el-container>
+        <el-footer>学生选课系统</el-footer>
+    </el-container>
+
+</div>
+
+
+<script type="module">
+    import {nanoid} from "../js/nanoid.js";
+
+    Vue.config.productionTip = false //阻止vue 在启动时生成生产提示
+    new Vue({
+        el: "#app",
+        data() {
+            return {
+                searchWord: '',
+                scData: {
+                    scId: '',
+                    cId: '',
+                    uId: '',
+                    score: 0
+                },//选课提交数据
+                pagination: {
+                    currentPage: 1,
+                    pageSize: 5,
+                    total: 30
+                }, //分页
+                courseList: [], //选课列表
+                roleOptions: [{value: 'student', label: '学生'}, {value: 'teacher', label: '教师'}, {
+                    value: 'admin',
+                    label: '管理员'
+                }],
+                radio: 1,
+                formData: {
+                    id: '',
+                    name: '',
+                    pwd: '',
+                    className: '',
+                    academy: '',
+                    major: '',
+                    tel: '',
+                    email: '',
+                    role: 'student'
+                },
+
+            }
+        },
+        methods: {
+            getCourseList(condition) {
+                axios({method: 'GET', url: '/sc/list', params: {q: condition}}).then(rsp => {
+                    console.log(rsp.data)
+                    if (rsp.data.success) this.courseList = rsp.data.data;
+                }, err => {
+                    this.$message.error(err.message)
+                })
+            },
+            handleLogin() {
+                console.log(this.formData);
+                axios({
+                    method: 'POST',
+                    url: '/login/',
+                    data: {id: this.formData.id, pwd: this.formData.pwd, role: this.formData.role}
+                }).then(rsp => {
+                    console.log(rsp.data)
+                    if (rsp.data.success) {
+                        //保存localStorge
+                        this.$message({message: '登录成功！', type: 'success'})
+                        this.redirectURL('/index')
+                    } else {
+                        this.$message("登录失败，请检查用户名和密码是否正确")
+                    }
+                }, err => {
+                    this.$message.error(err.message)
+                })
+            },
+            handleOpen(key, keyPath) {
+                // console.log(key, keyPath);
+            },
+            handleClose(key, keyPath) {
+                // console.log(key, keyPath);
+            },
+            handleSelect(key, keyPath) {
+                this.redirectURL(key)
+            },
+            handleSelectCourse(index, row) {
+                console.log(index, row)
+                this.scData.cId = row.cId;
+                this.scData.uId = this.$refs.uId.innerText;
+                this.scData.scId = nanoid(6);
+                axios({
+                    method: 'post',
+                    url: '/sc',
+                    data: this.scData
+                }).then(rsp => {
+                    console.log('rsp:', rsp.data)
+                    if (rsp.data.success) {
+                        this.$message({message: '选课成功！', type: 'success'});
+                    } else {
+                        this.$message("选择失败")
+                    }
+                }, err => {
+                    this.$message.error(err.message)
+                }).finally(() => {
+                })
+                console.log('scData', this.scData)
+            },
+            handleCurrentChange() {
+            },
+            //查询课程
+            handleSearch() {
+                console.log(this.searchWord);
+                this.getCourseList(this.searchWord)
+            },
+            redirectURL(url) {
+                console.log(url)
+                window.location.href = window.location.origin + url;
+            }
+        },
+        created() {
+            axios.baseURL = 'http://localhost:8080/'
+            this.getCourseList("");
+        }
+    })
+</script>
+
+</body>
+</html>

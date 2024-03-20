@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo_course_selection.dao.SCDao">
+
+    <resultMap id="scResultMap" type="com.example.demo_course_selection.domain.SCResult">
+        <result property="scId" column="sc_id"></result>
+        <result property="uId" column="uid"></result>
+        <result property="cId" column="cid"></result>
+        <result property="score" column="score"></result>
+        <result property="score" column="score"></result>
+
+        <result property="cName" column="c_name"></result>
+
+        <result property="teacherId" column="teacher_id"></result>
+
+        <result property="credit" column="credit"></result>
+
+        <result property="classRoom" column="classroom"></result>
+        <result property="timeRange" column="time_range"></result>
+        <result property="cIntro" column="c_intro"></result>
+    </resultMap>
+
+    <!--    int addSC(SC sc);-->
+    <insert id="addSC" parameterType="SC">
+        INSERT INTO t_sc
+        VALUES (#{scId}, #{uId}, #{cId}, #{score});
+    </insert>
+
+    <!--    int deleteSCByuId(String uId);-->
+    <delete id="deleteSCByuId" parameterType="String">
+        DELETE
+        FROM t_sc
+        WHERE uid = #{uId};
+    </delete>
+
+    <!--    int deleteSCBycId(String cId);-->
+    <delete id="deleteSCBycId" parameterType="String">
+        DELETE
+        FROM t_sc
+        WHERE cid = #{cId};
+    </delete>
+
+    <!--    int deleteSCByscId(String scId);-->
+    <delete id="deleteSCByscId" parameterType="String">
+        DELETE
+        FROM t_sc
+        WHERE sc_id = #{scId};
+    </delete>
+    <!--    int updateSC(SC sc);-->
+    <update id="updateSC" parameterType="SC">
+        UPDATE t_sc
+        SET uid=#{uId},
+            cid=#{cId},
+            score=#{score}
+        WHERE sc_id = #{scId};
+    </update>
+
+    <!-- int updateSCBycId(SC sc);-->
+    <update id="updateSCBycId" parameterType="SC">
+        UPDATE t_sc
+        SET uid=#{uId},
+            score=#{score}
+        WHERE cid = #{cId};
+    </update>
+
+
+    <!--  List<SCResult>    getSCByuId(String uId);-->
+    <select id="getSCByuId" parameterType="String" resultMap="scResultMap">
+        SELECT *
+        FROM t_course,
+             t_sc
+        WHERE t_sc.cid = t_course.cid
+          and t_sc.uid = #{uId};
+    </select>
+
+    <!--    List<SCResult> getSCByCondition(String uId,String condition);-->
+    <select id="getSCByCondition" parameterType="String" resultMap="scResultMap">
+        SELECT DISTINCT*
+        FROM t_sc,
+             t_course
+        WHERE t_course.cid = t_sc.cid
+          AND t_sc.uid = #{uId}
+          AND (t_course.cid like '%${condition}%'
+            OR t_course.c_name like '%${condition}%'
+            OR t_course.teacher_id like '%${condition}%'
+            OR t_course.classroom like '%${condition}%'
+            OR t_course.credit LIKE '%${condition}%'
+            or t_course.`limit` LIKE '%${condition}%'
+            OR t_course.type LIKE '%${condition}%'
+            OR t_course.academy LIKE '%${condition}%')
+    </select>
+
+    <!--    SC getSCBycId(String cid);-->
+    <select id="getSCBycId" parameterType="String" resultMap="scResultMap">
+        SELECT *
+        FROM t_sc
+        WHERE cid = #{cId};
+    </select>
+
+    <!--    //查询所有学号姓名分数和课程名的记录-->
+    <!--    SC getAllDetailSC();-->
+    <select id="getAllDetailSC" resultMap="scResultMap">
+        #         SELECT u.id,u.`name`,sc.score,c.c_name FROM t_sc sc ,t_user u,t_course c WHERE u.id=sc.id AND sc.cid=c.cid;
+        SELECT *
+        FROM t_sc sc,
+             t_user u,
+             t_course c
+        WHERE u.id = sc.uid
+          AND sc.cid = c.cid;
+    </select>
+
+
+
+</mapper>
+
+        <!--/**-->
+        <!--* 注：删除用户或课程时，要先删除选课表中对应的选课记录，再删除用户或者课程-->
+        <!--*-->
+        <!--* INSERT INTO t_sc VALUES('202203','c1' ,90);          &#45;&#45;添加选课记录 因为是外键 所以添加之前用户表得有‘202203’的数据 课程有‘c1’的数据，-->
+        <!--* DELETE FROM t_sc WHERE id = '202203';                       &#45;&#45;删除选课记录-->
+        <!--* UPDATE t_sc SET score=100 WHERE id='202203' and cid='c1';   &#45;&#45;更新学生课程成绩-->
+        <!--* SELECT * FROM t_sc WHERE id = '202201';              &#45;&#45;查询用户为202201的选课记录-->
+        <!--* SELECT * FROM t_sc WHERE cid = 'c1';                 &#45;&#45;查询课程号为c1的选课记录-->
+        <!--* SELECT * FROM t_sc WHERE score >=80;                 &#45;&#45;查询分数大于80的选课记录-->
+        <!--* SELECT * FROM t_sc,t_course WHERE t_sc.cid=t_course.cid AND t_course.teacher_id='222'; &#45;&#45;查询学生选课教师号为'222'的记录-->
+        <!--* SELECT u.id,u.`name`,sc.score,c.c_name FROM t_sc sc ,t_user u,t_course c-->
+        <!--* WHERE u.id=sc.id AND sc.cid=c.cid;                   &#45;&#45;查询学号名字分数和课程名-->
+        <!--*/-->
