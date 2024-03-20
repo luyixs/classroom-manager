@@ -1,0 +1,261 @@
+<template>
+  <div class="login-app">
+    <!-- 登录注册盒子 -->
+    <el-card class="login-box">
+      <el-tabs v-model="activeTab" @tab-click="handleChangeTab" a>
+        <!--登录选项卡-->
+        <el-tab-pane label="登录" name="login">
+          <h3>登录</h3>
+          <el-form ref="form" label-width="80px" :model="formData" action="http://localhost:8080" method="post">
+            <el-form-item label="ID:" size="medium">
+              <el-input placeholder="请输入学号/教工号" v-model="formData.id" clearable></el-input>
+            </el-form-item>
+            <el-form-item label="密码:" size="medium">
+              <el-input placeholder="请输入密码" v-model="formData.pwd" show-password></el-input>
+            </el-form-item>
+            <el-form-item label="身份:">
+              <el-select v-model="formData.role" placeholder="请选择" size="mini" style="width: 100px;">
+                <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="handleLogin">登录</el-button>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+        <!--注册选项卡-->
+        <el-tab-pane label="注册" name="register">
+          <h3>注册</h3>
+          <el-form ref="form" label-width="80px" :model="formData" action="http://localhost:8080" method="post">
+            <el-form-item label="ID:" size="medium">
+              <el-input placeholder="请输入学号/教工号" v-model="formData.id" clearable></el-input>
+            </el-form-item>
+            <el-form-item label="姓名:" size="medium">
+              <el-input placeholder="请输入姓名" v-model="formData.name" maxlength="10" show-word-limit clearable>
+              </el-input>
+            </el-form-item>
+            <el-form-item label="密码:" size="medium">
+              <el-input placeholder="请输入密码" v-model="formData.pwd" show-password></el-input>
+            </el-form-item>
+            <el-form-item label="确认密码:" size="medium">
+              <el-input placeholder="请输入密码" v-model="repwd" show-password></el-input>
+            </el-form-item>
+            <el-form-item label="班级:" size="medium">
+              <el-select v-model="formData.academy" placeholder="院系" @change="academyChange($event)" size="mini"
+                style="width: 80px;">
+                <el-option v-for="academy in sOptions.academy" :key="academy" :label="academy" :value="academy">
+                </el-option>
+              </el-select>
+              <el-select v-model="formData.major" placeholder="专业" @change="majorChange" size="mini"
+                style="width: 80px;">
+                <el-option v-for="majorItem in majors" :key="majorItem.major" :label="majorItem.major"
+                  :value="majorItem.major">
+                </el-option>
+              </el-select>
+              <el-select v-model="formData.className" placeholder="班级" @change="" size="mini" style="width: 90px;">
+                <el-option v-for="classItem in classes" :key="classItem.class" :label="classItem.class"
+                  :value="classItem.class">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="电话:" size="medium">
+              <el-input placeholder="请输入电话号码" v-model="formData.tel" clearable></el-input>
+            </el-form-item>
+            <el-form-item label="邮箱:" size="medium">
+              <el-input placeholder="请输入邮箱" v-model="formData.email" clearable></el-input>
+            </el-form-item>
+
+            <el-form-item label="身份:">
+              <el-select v-model="formData.role" placeholder="请选择" size="mini" style="width: 100px;">
+                <el-option v-for="item in roleOptions" :key="item.value" :label="item.label" :value="item.value">
+                </el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="handleRegister">注册</el-button>
+            </el-form-item>
+          </el-form>
+        </el-tab-pane>
+      </el-tabs>
+    </el-card>
+  </div>
+</template>
+
+<script>
+import Cookies from 'js-cookie';
+import axios from 'axios';
+export default {
+  components: {},
+  props: {},
+  data() {
+    return {
+      activeTab: 'register',
+      roleOptions: [{ value: 'student', label: '学生' }, { value: 'teacher', label: '教师' }, {
+        value: 'admin',
+        label: '管理员'
+      }],
+      repwd: '',
+      formData: {
+        id: '',
+        name: '',
+        pwd: '',
+        className: '',
+        academy: '',
+        major: '',
+        tel: '',
+        email: '',
+        role: 'student'
+      },
+      sOptions: {
+        academy: ['计算机学院', '艺术学院', '医学院', '理学院'],
+        majors: [
+          { academy: '计算机学院', major: '软件工程' },
+          { academy: '计算机学院', major: '计算机科学与技术' },
+          { academy: '计算机学院', major: '人工智能' },
+          { academy: '理学院', major: '数学与应用数学' },
+          { academy: '理学院', major: '信息与计算科学' },
+          { academy: '医学院', major: '临床医学' },
+          { academy: '医学院', major: '药学' },
+          { academy: '医学院', major: '口腔医学' },
+          { academy: '艺术学院', major: '美术学' },
+          { academy: '艺术学院', major: '视觉传达设计' },
+        ],
+        classes: [
+          { major: '软件工程', class: '2022级软件工程1班' },
+          { major: '软件工程', class: '2022级软件工程2班' },
+          { major: '软件工程', class: '2022级软件工程3班' },
+          { major: '计算机科学与技术', class: '2022级计算机科学与技术1班' },
+          { major: '计算机科学与技术', class: '2022级计算机科学与技术2班' },
+          { major: '人工智能', class: '2022级人工智能1班' },
+          { major: '数学与应用数学', class: '数学与应用数学1班' },
+          { major: '信息与计算科学', class: '信息与计算科学1班' },
+          { major: '视觉传达设计', class: '2022级视觉传达设计1班' },
+          { major: '美术学', class: '2022级美术学1班' },
+          { major: '临床医学', class: '2022级临床医学1班' },
+          { major: '药学', class: '2022级药学1班' },
+          { major: '口腔医学', class: '2022级口腔医学1班' },
+        ]
+      },
+      academy: '',
+      majors: [],
+      classes: [],
+    };
+  },
+  watch: {},
+  computed: {},
+  methods: {
+    handleLogin() {
+      // console.log(this.formData);
+      axios({
+        method: 'POST',
+        url: '/login/',
+        data: {
+          id: this.formData.id,
+          pwd: this.formData.pwd,
+          role: this.formData.role
+        }
+      }).then(rsp => {
+        if (rsp.data.success) {
+          this.$message({ message: '登录成功！', type: 'success' })
+          //保存cookie
+          console.log(rsp.data.data);
+          this.setCookie('loginUser',rsp.data.data)
+          //跳转页面
+          this.redirectURL('/index')
+        } else {
+          this.$message("登录失败，请检查用户名和密码是否正确")
+        }
+      }, err => {
+        this.$message.error(err.message)
+      })
+    },
+    handleRegister() {
+      if (this.formData.id == '') {
+        this.$message("学号/教工号不能为空")
+        return
+      }
+      if (this.repwd != this.formData.pwd) {
+        this.$message("两次密码不一致")
+        return
+      }
+      console.log(this.formData);
+      //发送请求
+      axios({
+        method: 'post',
+        // baseURL: 'http://localhost:8080/',
+        url: '/login/reg',
+        //提交数据格式为：{user={id='xx',pwd='xx'}}
+        data: {
+          user: this.formData
+        }
+      }).then(rsp => {
+        console.log('rsp:', rsp.data)
+        if (rsp.data.success) {
+          this.$message({
+            message: '添加成功！',
+            type: 'success'
+          });
+          this.activeTab = 'login'
+        } else {
+          this.$message("添加失败")
+        }
+      }, err => {
+        this.$message.error(err.message)
+      }).finally(() => {
+      })
+
+      //提交数据格式为：{id='xx',pwd='xx'}
+      // axios.post('http://localhost:8080/login/reg2',this.formData).then(
+      //     rsp=>{console.log('rsp:',rsp.data)},
+      //     err=>{this.$message(e.message)}
+      // )
+    },
+    handleChangeTab(tab, event) {
+      // console.log(tab, event);
+    },
+    academyChange(e) {
+      this.formData.major = '' //选择一级下拉菜单后先清空二级下拉菜单之前的内容
+      this.formData.className = ''
+      this.majors = this.sOptions.majors.filter(major => {
+        return major.academy == this.formData.academy
+      })
+    },
+    majorChange() {
+      this.formData.className = ''
+      this.classes = this.sOptions.classes.filter(classItem => {
+        return classItem.major == this.formData.major
+      })
+    },
+    redirectURL(url) {
+      console.log(url)
+      window.location.href = window.location.origin + url;
+    },
+
+    setLoginUser() {
+      this.loginUser = this.getCookie('loginUser')
+    },
+
+    setCookie(key, value) {
+      Cookies.set(key, JSON.stringify(value))
+    },
+    getCookie(key) {
+      // console.log('IndexLogin getCookie 被调用')
+      let cookieValue = Cookies.get(key)
+      if (cookieValue == undefined) {
+        return null //cookie未定义
+      }
+      return JSON.parse(Cookies.get(key))
+    },
+  },
+  created() { },
+  mounted() { }
+}
+</script>
+
+<style scoped>
+.login-app {
+  width: 400px;
+  margin: 50px auto ;
+}
+</style>

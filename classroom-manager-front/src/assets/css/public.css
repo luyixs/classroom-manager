@@ -1,0 +1,113 @@
+body {
+  background: linear-gradient(to right, #a1e7fe 0%, #ffcce6 100%);
+  overflow-y: scroll;
+}
+
+body::-webkit-scrollbar {
+  width: 5px;
+}
+
+body::-webkit-scrollbar-track-piece {
+  background: #efdae5
+}
+
+body::-webkit-scrollbar-thumb {
+  background: #a2aadd;
+}
+
+body::before {
+  content: '';
+  display: block;
+  width: 600px;
+  height: 600px;
+
+  position: fixed;
+  top: -200px;
+  left: -200px;
+  box-shadow: 0px -0px 100px 2px rgb(146, 160, 220);
+  border-radius: 100%;
+  z-index: -1;
+}
+
+body::after {
+  content: '';
+  display: block;
+  width: 800px;
+  height: 800px;
+  position: fixed;
+  bottom: -100px;
+  right: 10px;
+  box-shadow: 0px 0px 100px 2px rgb(146, 160, 220);
+  border-radius: 100%;
+
+  z-index: -1;
+}
+
+.index-app,
+.sc-app,
+.course-app,
+.signin-app {
+  width: 70%;
+  margin: 50px auto;
+}
+
+
+.el-header,
+.el-footer {
+  background-color: #b4c9f9;
+  background: linear-gradient(to right, #b2e5f6 0%, #ffdbee 100%);
+  color: #5b4d82;
+  text-align: center;
+  line-height: 60px;
+  margin: 10px 0px;
+  font-family: fantasy;
+  /* backdrop-filter:  blur(5px); 模糊效果 */
+  /* border: 2px solid #000000; */
+  /* border-radius: 30px; */
+}
+
+.el-aside {
+  background-color: #ffffff;
+  color: #333;
+  margin-right: 10px;
+  border-radius: 30px 30px 30px 30px;
+  overflow: hidden !important;
+  /* box-shadow: 2px 2px 5px 2px rgb(150, 149, 149); */
+}
+
+.el-main {
+  background-color: #ffffff;
+  color: #333;
+  /* backdrop-filter:  blur(100px); */
+}
+
+
+.el-header,
+.el-footer,
+.el-aside,
+.el-main {
+  transition: .3s;
+  box-shadow: 10px 10px 5px 2px rgb(118, 118, 163);
+  border-radius: 30px 30px 30px 30px;
+}
+
+/* .el-header,.el-footer{
+  box-shadow: 0px 0px 10px 2px rgb(118, 118, 163);
+} */
+
+/* .el-header:hover,.el-footer:hover, */
+.el-aside:hover,
+.el-main:hover {
+  box-shadow: 0px 0px 0px 0px rgb(163, 120, 218);
+  /* transform: translate(-2px,-2px); */
+}
+
+body>.el-container {
+  margin-bottom: 40px;
+  /* background-color: #ffffff; */
+}
+
+.el-menu-item .el-link {
+  width: 100%;
+  justify-content: flex-start;
+}
